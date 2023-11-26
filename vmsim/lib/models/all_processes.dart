@@ -21,6 +21,7 @@ class AllProcesses {
       allProc?[i] = Process(
           offsetBits: this.offsetBits,
           virtualSize: this.virtualSize,
+          processNumber: i,
           numberVirtualAddr: 3);
     }
   }

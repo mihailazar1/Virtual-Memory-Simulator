@@ -79,18 +79,20 @@ class _VirtualMemoryState extends State<VirtualMemory> {
   }
 
   Widget buildProcessList() {
-    return Container(
-      width: 200,
-      height: 200, // Adjust the width as needed
-      child: ListView.builder(
-        itemCount: ap.allProc?.length ?? 0,
-        itemBuilder: (context, index) => ListTile(
-          title: Text('Process $index'),
-          onTap: () {
-            setState(() {
-              selectedProcessIndex = index;
-            });
-          },
+    return Expanded(
+      child: Container(
+        width: 200,
+        height: 300, // Adjust the width as needed
+        child: ListView.builder(
+          itemCount: ap.allProc?.length ?? 0,
+          itemBuilder: (context, index) => ListTile(
+            title: Text('Process $index'),
+            onTap: () {
+              setState(() {
+                selectedProcessIndex = index;
+              });
+            },
+          ),
         ),
       ),
     );
@@ -108,19 +110,58 @@ class _VirtualMemoryState extends State<VirtualMemory> {
       return Container(); // Empty container when no PageTable is available for the selected process
     }
 
-    return DataTable(
-      columns: [
-        DataColumn(label: Text('Page Number')),
-        DataColumn(label: Text('Frame Number')),
-      ],
-      rows: List.generate(
-        pageTable.length,
-        (index) => DataRow(
-          cells: [
-            DataCell(Text('$index')),
-            DataCell(Text('${pageTable.pages?[index]}')),
-          ],
-        ),
+    return SingleChildScrollView(
+      scrollDirection: Axis.vertical,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          DataTable(
+            columns: [
+              DataColumn(label: Text('Page Number')),
+              DataColumn(label: Text('Frame Number')),
+            ],
+            rows: List.generate(
+              pageTable.length,
+              (index) => DataRow(
+                cells: [
+                  DataCell(Text('$index')),
+                  DataCell(Text('${pageTable.pages?[index]}')),
+                ],
+              ),
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget buildRamTable() {
+    if (ramMemory.ramLength == 0) return Container();
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.vertical,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          DataTable(
+            columns: [
+              DataColumn(label: Text('Frame #')),
+              DataColumn(label: Text('Process #')),
+              DataColumn(label: Text('Data')),
+            ],
+            rows: List.generate(
+              ramMemory.ramLength,
+              (index) => DataRow(
+                cells: [
+                  DataCell(Text('$index')),
+                  DataCell(
+                      Text('${ramMemory.getRamEntry(index).processNumber}')),
+                  DataCell(Text('${ramMemory.getRamEntry(index).data}')),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -158,7 +199,7 @@ class _VirtualMemoryState extends State<VirtualMemory> {
                   onPressed: startSimulation,
                 ),
 
-                SizedBox(height: 20), // Added spacing before the process list
+                SizedBox(height: 30), // Added spacing before the process list
                 buildProcessList(), // Display the list of processes
               ],
             ),
@@ -166,33 +207,7 @@ class _VirtualMemoryState extends State<VirtualMemory> {
 
             buildPageTable(), // Display the Page Table for the selected process
 
-            SingleChildScrollView(
-              scrollDirection: Axis.vertical,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  DataTable(
-                    columns: [
-                      DataColumn(label: Text('Frame #')),
-                      DataColumn(label: Text('Process #')),
-                      DataColumn(label: Text('Data')),
-                    ],
-                    rows: List.generate(
-                      ramMemory.ramLength,
-                      (index) => DataRow(
-                        cells: [
-                          DataCell(Text('$index')),
-                          DataCell(Text(
-                              '${ramMemory.getRamEntry(index).processNumber}')),
-                          DataCell(
-                              Text('${ramMemory.getRamEntry(index).data}')),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            buildRamTable(),
           ],
         ),
       ),

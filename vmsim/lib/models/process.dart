@@ -8,13 +8,15 @@ class Process {
   int offsetBits;
   int virtualSize;
   int numberVirtualAddr;
+  int processNumber;
   PageTable? pt;
   List<VirtualAddress>? va;
 
   Process(
       {required this.offsetBits,
       required this.virtualSize,
-      required this.numberVirtualAddr}) {
+      required this.numberVirtualAddr,
+      required this.processNumber}) {
     pt = PageTable(offsetBits: offsetBits, virtualSize: virtualSize);
     generateVirtualAddr();
   }
