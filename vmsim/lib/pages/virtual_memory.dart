@@ -1,6 +1,7 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
 import "package:flutter/material.dart";
+import "package:vmsim/algorithms/lru.dart";
 import "package:vmsim/models/all_processes.dart";
 import "package:vmsim/models/ram.dart";
 import "package:vmsim/util/button.dart";
@@ -15,6 +16,8 @@ class VirtualMemory extends StatefulWidget {
 }
 
 class _VirtualMemoryState extends State<VirtualMemory> {
+  int currentTime = 0; // Variable to keep track of the current time
+
   final _cProcesses = TextEditingController();
   final _cPhysSize = TextEditingController();
   final _cVirtSize = TextEditingController();
@@ -36,7 +39,9 @@ class _VirtualMemoryState extends State<VirtualMemory> {
         physicalSize: int.parse(_cPhysSize.text));
     _cTest.text = ap.allProc![0]!.va![0].p.toString();
 
-    setState(() {});
+    setState(() {
+      currentTime++;
+    });
   }
 
   Widget _buildTextField(String hintText, TextEditingController controller) {
@@ -50,6 +55,19 @@ class _VirtualMemoryState extends State<VirtualMemory> {
         ),
       ),
     );
+  }
+
+  void handlePageFault(int processNumber, int virtualPageNumber) {
+    int frameNumber = ramMemory
+        .findFreeFrame(); // Implement the logic to find a free frame or use a page replacement algorithm
+    if (frameNumber == -1) {
+      // No free frame, perform page replacement using the LRU algorithm from PageReplacementUtils
+      frameNumber = PageReplacementUtils.findLruPage(ramMemory.memoryRows);
+    }
+
+    // Load the new page into the selected frame
+    ramMemory.setRamEntry(
+        frameNumber, virtualPageNumber, processNumber, currentTime);
   }
 
   @override

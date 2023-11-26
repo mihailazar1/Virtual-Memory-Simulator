@@ -7,14 +7,14 @@ import 'package:vmsim/models/virtual_address.dart';
 class Process {
   int offsetBits;
   int virtualSize;
-  int noVirtualAddr;
+  int numberVirtualAddr;
   PageTable? pt;
   List<VirtualAddress>? va;
 
   Process(
       {required this.offsetBits,
       required this.virtualSize,
-      required this.noVirtualAddr}) {
+      required this.numberVirtualAddr}) {
     pt = PageTable(offsetBits: offsetBits, virtualSize: virtualSize);
     generateVirtualAddr();
   }
@@ -26,7 +26,7 @@ class Process {
     Random random = Random();
 
     va = List<VirtualAddress>.filled(
-        this.noVirtualAddr,
+        this.numberVirtualAddr,
         VirtualAddress(
             p: random.nextInt(pow(2, pageBitsLen).toInt()),
             d: random.nextInt(pow(2, offsetBits).toInt())));
