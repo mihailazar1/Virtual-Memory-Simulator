@@ -1,7 +1,11 @@
+// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
+
 import "package:flutter/material.dart";
 import "package:vmsim/models/all_processes.dart";
+import "package:vmsim/models/ram.dart";
 import "package:vmsim/util/button.dart";
 import "package:vmsim/util/my_text_field.dart";
+import "package:vmsim/util/ram_table.dart";
 
 class VirtualMemory extends StatefulWidget {
   const VirtualMemory({super.key});
@@ -15,18 +19,37 @@ class _VirtualMemoryState extends State<VirtualMemory> {
   final _cPhysSize = TextEditingController();
   final _cVirtSize = TextEditingController();
   final _cOffset = TextEditingController();
-  AllProcesses? ap;
+  final _cTest = TextEditingController();
+  late AllProcesses ap;
 
-  void createProcesses() {
+  Ram ramMemory = Ram(offsetBits: 1, physicalSize: 1);
+
+  void startSimulation() {
     ap = AllProcesses(
       offsetBits: int.parse(_cOffset.text),
       virtualSize: int.parse(_cVirtSize.text),
       noProc: int.parse(_cProcesses.text),
     );
 
-    setState(() {
-      _cOffset.text = ap!.allProc![0]!.va![0].p.toString();
-    });
+    ramMemory = Ram(
+        offsetBits: int.parse(_cOffset.text),
+        physicalSize: int.parse(_cPhysSize.text));
+    _cTest.text = ap.allProc![0]!.va![0].p.toString();
+
+    setState(() {});
+  }
+
+  Widget _buildTextField(String hintText, TextEditingController controller) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 15, bottom: 15),
+      child: SizedBox(
+        width: 200, // Increased width for better readability
+        child: MyTextField(
+          hintText: hintText,
+          controller: controller,
+        ),
+      ),
+    );
   }
 
   @override
@@ -34,7 +57,7 @@ class _VirtualMemoryState extends State<VirtualMemory> {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 194, 177, 225),
       appBar: AppBar(
-        title: Center(
+        title: const Center(
           child: Text(
             "Virtual Memory Simulator",
             style: TextStyle(fontSize: 25),
@@ -42,53 +65,48 @@ class _VirtualMemoryState extends State<VirtualMemory> {
         ),
         elevation: 0,
       ),
-      body: Row(
-        children: [
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 15, bottom: 15),
-                child: SizedBox(
-                  width: 140,
-                  child: MyTextField(
-                      hintText: "# of processes", controller: _cProcesses),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 15, bottom: 15),
-                child: SizedBox(
-                  width: 140,
-                  child: MyTextField(
-                      hintText: "Physical Size", controller: _cPhysSize),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 15, bottom: 15),
-                child: SizedBox(
-                  width: 140,
-                  child: MyTextField(
-                      hintText: "Virtual Size", controller: _cVirtSize),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 15, bottom: 15),
-                child: SizedBox(
-                  width: 140,
-                  child: MyTextField(
-                      hintText: "# of offset bits", controller: _cOffset),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 15),
-                child: Button(
+      body: Padding(
+        padding: const EdgeInsets.all(20), // Added padding for better spacing
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildTextField("# of processes", _cProcesses),
+                _buildTextField("Physical Size", _cPhysSize),
+                _buildTextField("Virtual Size", _cVirtSize),
+                _buildTextField("# of offset bits", _cOffset),
+                _buildTextField("test", _cTest),
+                SizedBox(
+                    height: 20), // Added spacing between text fields and button
+                Button(
                   text: "Start Simulation",
-                  onPressed: createProcesses,
+                  onPressed: startSimulation,
+                ),
+              ],
+            ),
+            const SizedBox(width: 20),
+            SingleChildScrollView(
+              scrollDirection: Axis.vertical,
+              child: DataTable(
+                columns: [
+                  DataColumn(label: Text('Frame #')),
+                  DataColumn(label: Text('Data')),
+                ],
+                rows: List.generate(
+                  ramMemory.ramLength,
+                  (index) => DataRow(
+                    cells: [
+                      DataCell(Text('$index')),
+                      DataCell(Text('${ramMemory.getRamEntry(index)}')),
+                    ],
+                  ),
                 ),
               ),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
