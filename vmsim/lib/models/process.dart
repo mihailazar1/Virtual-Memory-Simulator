@@ -18,6 +18,7 @@ class Process {
       required this.numberVirtualAddr,
       required this.processNumber}) {
     pt = PageTable(offsetBits: offsetBits, virtualSize: virtualSize);
+
     generateVirtualAddr();
   }
 
@@ -27,10 +28,12 @@ class Process {
 
     Random random = Random();
 
-    va = List<VirtualAddress>.filled(
-        this.numberVirtualAddr,
-        VirtualAddress(
-            p: random.nextInt(pow(2, pageBitsLen).toInt()),
-            d: random.nextInt(pow(2, offsetBits).toInt())));
+    va = List<VirtualAddress>.generate(
+      this.numberVirtualAddr,
+      (index) => VirtualAddress(
+        p: random.nextInt(pow(2, pageBitsLen).toInt()),
+        d: random.nextInt(pow(2, offsetBits).toInt()),
+      ),
+    );
   }
 }

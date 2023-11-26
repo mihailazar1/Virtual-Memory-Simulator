@@ -5,6 +5,7 @@ import "package:vmsim/algorithms/lru.dart";
 import "package:vmsim/models/all_processes.dart";
 import "package:vmsim/models/page_table.dart";
 import "package:vmsim/models/ram.dart";
+import "package:vmsim/models/virtual_address.dart";
 import "package:vmsim/util/button.dart";
 import "package:vmsim/util/my_text_field.dart";
 import "package:vmsim/util/ram_table.dart";
@@ -166,6 +167,45 @@ class _VirtualMemoryState extends State<VirtualMemory> {
     );
   }
 
+  Widget buildVirtualAddresses() {
+    if (selectedProcessIndex == -1) {
+      return Container(); // Display nothing if no process is selected
+    }
+
+    List<VirtualAddress>? virtualAddresses =
+        ap.allProc?[selectedProcessIndex]?.va;
+
+    if (virtualAddresses == null) {
+      return Container(); // Display nothing if virtual addresses are not available
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Virtual Addresses for Process $selectedProcessIndex:'),
+        for (var address in virtualAddresses)
+          Text('P: ${address.p}, D: ${address.d}'),
+      ],
+    );
+  }
+
+  void updateMapping() {
+    // Check if a process is selected
+    if (selectedProcessIndex != -1) {
+      // Assuming each process has a reference to its PageTable
+      PageTable? pageTable = ap.allProc?[selectedProcessIndex]?.pt;
+
+      // Check if the PageTable is not null
+      if (pageTable != null) {
+        // Update the UI by triggering a rebuild
+        setState(() {
+          // Update the RAM memory (you need to implement this method in your Ram class)
+          //ramMemory.updateFromPageTable(pageTable);
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -179,13 +219,20 @@ class _VirtualMemoryState extends State<VirtualMemory> {
         ),
         elevation: 0,
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: updateMapping,
+        elevation: 0,
+        child: Icon(
+          Icons.arrow_right,
+          size: 45,
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(20), // Added padding for better spacing
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _buildTextField("# of processes", _cProcesses),
                 _buildTextField("Physical Size", _cPhysSize),
@@ -201,6 +248,9 @@ class _VirtualMemoryState extends State<VirtualMemory> {
 
                 SizedBox(height: 30), // Added spacing before the process list
                 buildProcessList(), // Display the list of processes
+                SizedBox(height: 20),
+
+                buildVirtualAddresses(),
               ],
             ),
             const SizedBox(width: 20),
