@@ -92,6 +92,7 @@ class _VirtualMemoryState extends State<VirtualMemory> {
               child: DataTable(
                 columns: [
                   DataColumn(label: Text('Frame #')),
+                  DataColumn(label: Text('Process #')),
                   DataColumn(label: Text('Data')),
                 ],
                 rows: List.generate(
@@ -99,7 +100,9 @@ class _VirtualMemoryState extends State<VirtualMemory> {
                   (index) => DataRow(
                     cells: [
                       DataCell(Text('$index')),
-                      DataCell(Text('${ramMemory.getRamEntry(index)}')),
+                      DataCell(Text(
+                          '${ramMemory.getRamEntry(index).processNumber}')),
+                      DataCell(Text('${ramMemory.getRamEntry(index).data}')),
                     ],
                   ),
                 ),
