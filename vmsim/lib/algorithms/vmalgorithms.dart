@@ -34,7 +34,7 @@ class Algorithms {
     pageTable.setPageTableEntry(pageNumber, frameNumber);
   }
 
-  static void execute(Ram ramMemory, int currentTime, int selectedProcessIndex,
+  static int execute(Ram ramMemory, int currentTime, int selectedProcessIndex,
       AllProcesses ap) {
     Process? process = ap.allProc[selectedProcessIndex];
     List<VirtualAddress> va = process!.va;
@@ -42,11 +42,14 @@ class Algorithms {
     int content = va[0].getPageNumber(); // contents to place in RAM
     int pageNumber = va[0].getPageNumber();
 
-    if (pageTable.getPageTableEntry(va[0].d) == -1) {
+    if (pageTable.getPageTableEntry(va[0].getPageNumber()) == -1) {
       print(
           'Page requested not found in page table. Data will be loaded from Secondary Memory. TLB, Page Table and Physical Memory is updated accordingly\n');
       handlePageFault(ramMemory, currentTime, process.processNumber, pageNumber,
           'Block: $content', pageTable);
+
+      return 1;
     }
+    return 0;
   }
 }

@@ -180,9 +180,13 @@ class _VirtualMemoryState extends State<VirtualMemory> {
     if (selectedProcessIndex != -1) {
       // Assuming each process has a reference to its PageTable
       PageTable? pageTable = ap.allProc[selectedProcessIndex]?.pt;
-      Algorithms.execute(ramMemory, currentTime, selectedProcessIndex, ap);
+      int result =
+          Algorithms.execute(ramMemory, currentTime, selectedProcessIndex, ap);
 
-      currentTime++;
+      if (result == 1)
+        currentTime++;
+      else
+        print("Page already mapped\n");
       // Check if the PageTable is not null
       if (pageTable != null) {
         // Update the UI by triggering a rebuild
