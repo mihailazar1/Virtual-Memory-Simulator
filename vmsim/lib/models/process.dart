@@ -33,6 +33,7 @@ class Process {
       (index) => VirtualAddress(
         p: random.nextInt(pow(2, pageBitsLen).toInt()),
         d: random.nextInt(pow(2, offsetBits).toInt()),
+        executed: false,
       ),
     );
   }

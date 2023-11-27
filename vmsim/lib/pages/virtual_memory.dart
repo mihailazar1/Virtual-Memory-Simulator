@@ -8,7 +8,9 @@ import "package:vmsim/models/ram.dart";
 import "package:vmsim/models/virtual_address.dart";
 import "package:vmsim/util/button.dart";
 import "package:vmsim/util/my_text_field.dart";
-import "package:vmsim/util/ram_table.dart";
+
+const int PAGE_NOT_ALREADY_MAPPED = 1;
+const int PAGE_ALREADY_MAPPED = 0;
 
 class VirtualMemory extends StatefulWidget {
   const VirtualMemory({super.key});
@@ -159,7 +161,7 @@ class _VirtualMemoryState extends State<VirtualMemory> {
     }
 
     List<VirtualAddress>? virtualAddresses =
-        ap.allProc?[selectedProcessIndex]?.va;
+        ap.allProc[selectedProcessIndex]?.va;
 
     if (virtualAddresses == null) {
       return Container(); // Display nothing if virtual addresses are not available
@@ -170,7 +172,34 @@ class _VirtualMemoryState extends State<VirtualMemory> {
       children: [
         Text('Virtual Addresses for Process $selectedProcessIndex:'),
         for (var address in virtualAddresses)
-          Text('P: ${address.p}, D: ${address.d}'),
+          RichText(
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: 'P: ',
+                  style: TextStyle(color: Colors.black),
+                ),
+                TextSpan(
+                  text: '${address.p}',
+                  style: TextStyle(
+                    color: address.executed == true ? Colors.green : Colors.red,
+                    // Add other styles if needed
+                  ),
+                ),
+                TextSpan(
+                  text: ', D: ',
+                  style: TextStyle(color: Colors.black),
+                ),
+                TextSpan(
+                  text: '${address.d}',
+                  style: TextStyle(
+                    color: address.executed == true ? Colors.green : Colors.red,
+                    // Add other styles if needed
+                  ),
+                ),
+              ],
+            ),
+          ),
       ],
     );
   }
@@ -183,7 +212,7 @@ class _VirtualMemoryState extends State<VirtualMemory> {
       int result =
           Algorithms.execute(ramMemory, currentTime, selectedProcessIndex, ap);
 
-      if (result == 1)
+      if (result == PAGE_NOT_ALREADY_MAPPED)
         currentTime++;
       else
         print("Page already mapped\n");

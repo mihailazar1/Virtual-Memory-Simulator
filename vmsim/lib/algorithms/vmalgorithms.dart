@@ -5,6 +5,9 @@ import 'package:vmsim/models/ram.dart';
 import 'package:vmsim/models/ram_row.dart';
 import 'package:vmsim/models/virtual_address.dart';
 
+const int PAGE_NOT_ALREADY_MAPPED = 1;
+const int PAGE_ALREADY_MAPPED = 0;
+
 class Algorithms {
   static int findLruPage(List<RamRow> memoryRows) {
     int minTime = memoryRows[0].lastAccessTime;
@@ -39,17 +42,33 @@ class Algorithms {
     Process? process = ap.allProc[selectedProcessIndex];
     List<VirtualAddress> va = process!.va;
     PageTable pageTable = process.pt;
-    int content = va[0].getPageNumber(); // contents to place in RAM
-    int pageNumber = va[0].getPageNumber();
 
-    if (pageTable.getPageTableEntry(va[0].getPageNumber()) == -1) {
+    int nextAddr = getNextAddress(va);
+
+    int content = va[nextAddr].getPageNumber(); // contents to place in RAM
+    int pageNumber = va[nextAddr].getPageNumber();
+
+    va[nextAddr].executed = true;
+
+    if (pageTable.getPageTableEntry(pageNumber) == -1) {
+      // The page is not mapped
       print(
           'Page requested not found in page table. Data will be loaded from Secondary Memory. TLB, Page Table and Physical Memory is updated accordingly\n');
       handlePageFault(ramMemory, currentTime, process.processNumber, pageNumber,
           'Block: $content', pageTable);
 
-      return 1;
+      return PAGE_NOT_ALREADY_MAPPED;
     }
-    return 0;
+    return PAGE_ALREADY_MAPPED;
+  }
+
+  static int getNextAddress(List<VirtualAddress> va) {
+    for (int i = 0; i < va.length; i++) {
+      if (va[i].executed == false) {
+        return i;
+      }
+    }
+
+    return -1;
   }
 }

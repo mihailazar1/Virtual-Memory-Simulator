@@ -6,7 +6,7 @@ class AllProcesses {
   int offsetBits;
   int virtualSize;
   int noProc;
-  late HashMap<int, Process> allProc = HashMap<int, Process>();
+  late HashMap<int, Process> allProc;
 
   AllProcesses(
       {required this.offsetBits,
