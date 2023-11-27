@@ -6,7 +6,7 @@ class AllProcesses {
   int offsetBits;
   int virtualSize;
   int noProc;
-  HashMap<int, Process>? allProc;
+  late HashMap<int, Process> allProc = HashMap<int, Process>();
 
   AllProcesses(
       {required this.offsetBits,
@@ -18,7 +18,7 @@ class AllProcesses {
 
   void generateProc() {
     for (var i = 0; i < this.noProc; i++) {
-      allProc?[i] = Process(
+      allProc[i] = Process(
           offsetBits: this.offsetBits,
           virtualSize: this.virtualSize,
           processNumber: i,

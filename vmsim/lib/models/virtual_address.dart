@@ -8,7 +8,7 @@ class VirtualAddress {
     return p;
   }
 
-  int getOffsetD() {
+  int getOffset() {
     return d;
   }
 }

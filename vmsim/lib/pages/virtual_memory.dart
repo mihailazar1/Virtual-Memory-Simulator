@@ -1,7 +1,7 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
 import "package:flutter/material.dart";
-import "package:vmsim/algorithms/lru.dart";
+import 'package:vmsim/algorithms/vmalgorithms.dart';
 import "package:vmsim/models/all_processes.dart";
 import "package:vmsim/models/page_table.dart";
 import "package:vmsim/models/ram.dart";
@@ -25,7 +25,7 @@ class _VirtualMemoryState extends State<VirtualMemory> {
   final _cVirtSize = TextEditingController();
   final _cOffset = TextEditingController();
   final _cTest = TextEditingController();
-  late AllProcesses ap = AllProcesses(
+  AllProcesses ap = AllProcesses(
     offsetBits: 1,
     virtualSize: 2,
     noProc: 0,
@@ -44,10 +44,9 @@ class _VirtualMemoryState extends State<VirtualMemory> {
     ramMemory = Ram(
         offsetBits: int.parse(_cOffset.text),
         physicalSize: int.parse(_cPhysSize.text));
-    _cTest.text = ap.allProc![0]!.va![0].p.toString();
+    _cTest.text = ap.allProc[0]!.va[0].p.toString();
 
     setState(() {
-      currentTime++;
       selectedProcessIndex =
           -1; // Reset the selected process index when starting a new simulation
     });
@@ -64,19 +63,6 @@ class _VirtualMemoryState extends State<VirtualMemory> {
         ),
       ),
     );
-  }
-
-  void handlePageFault(int processNumber, int virtualPageNumber) {
-    int frameNumber = ramMemory
-        .findFreeFrame(); // Implement the logic to find a free frame or use a page replacement algorithm
-    if (frameNumber == -1) {
-      // No free frame, perform page replacement using the LRU algorithm from PageReplacementUtils
-      frameNumber = PageReplacementUtils.findLruPage(ramMemory.memoryRows);
-    }
-
-    // Load the new page into the selected frame
-    ramMemory.setRamEntry(
-        frameNumber, virtualPageNumber, processNumber, currentTime);
   }
 
   Widget buildProcessList() {
@@ -157,7 +143,7 @@ class _VirtualMemoryState extends State<VirtualMemory> {
                   DataCell(Text('$index')),
                   DataCell(
                       Text('${ramMemory.getRamEntry(index).processNumber}')),
-                  DataCell(Text('${ramMemory.getRamEntry(index).data}')),
+                  DataCell(Text(ramMemory.getRamEntry(index).data)),
                 ],
               ),
             ),
@@ -189,12 +175,14 @@ class _VirtualMemoryState extends State<VirtualMemory> {
     );
   }
 
-  void updateMapping() {
+  void executeInstruction() {
     // Check if a process is selected
     if (selectedProcessIndex != -1) {
       // Assuming each process has a reference to its PageTable
-      PageTable? pageTable = ap.allProc?[selectedProcessIndex]?.pt;
+      PageTable? pageTable = ap.allProc[selectedProcessIndex]?.pt;
+      Algorithms.execute(ramMemory, currentTime, selectedProcessIndex, ap);
 
+      currentTime++;
       // Check if the PageTable is not null
       if (pageTable != null) {
         // Update the UI by triggering a rebuild
@@ -220,7 +208,7 @@ class _VirtualMemoryState extends State<VirtualMemory> {
         elevation: 0,
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: updateMapping,
+        onPressed: executeInstruction,
         elevation: 0,
         child: Icon(
           Icons.arrow_right,
@@ -251,6 +239,12 @@ class _VirtualMemoryState extends State<VirtualMemory> {
                 SizedBox(height: 20),
 
                 buildVirtualAddresses(),
+                Text(
+                  'Current simulation time: $currentTime',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
             const SizedBox(width: 20),

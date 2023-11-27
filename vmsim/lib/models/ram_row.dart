@@ -1,5 +1,5 @@
 class RamRow {
-  int data;
+  String data;
   int processNumber;
   int lastAccessTime; // Timestamp or usage history
 

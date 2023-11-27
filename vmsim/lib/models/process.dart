@@ -9,8 +9,8 @@ class Process {
   int virtualSize;
   int numberVirtualAddr;
   int processNumber;
-  PageTable? pt;
-  List<VirtualAddress>? va;
+  late PageTable pt;
+  late List<VirtualAddress> va;
 
   Process(
       {required this.offsetBits,
