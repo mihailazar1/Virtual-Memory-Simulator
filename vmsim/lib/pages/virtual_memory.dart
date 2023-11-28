@@ -7,6 +7,7 @@ import "package:vmsim/models/page_table.dart";
 import "package:vmsim/models/ram.dart";
 import "package:vmsim/models/virtual_address.dart";
 import "package:vmsim/util/button.dart";
+import "package:vmsim/util/dropdown_button.dart";
 import "package:vmsim/util/my_text_field.dart";
 
 const int PAGE_NOT_ALREADY_MAPPED = 1;
@@ -27,6 +28,11 @@ class _VirtualMemoryState extends State<VirtualMemory> {
   final _cVirtSize = TextEditingController();
   final _cOffset = TextEditingController();
   final _cTest = TextEditingController();
+
+  String chosenAlgorithm = 'LRU';
+
+  List<String> replAlgorithms = <String>['LRU', 'FIFO', 'RANDOM'];
+
   AllProcesses ap = AllProcesses(
     offsetBits: 1,
     virtualSize: 2,
@@ -209,13 +215,18 @@ class _VirtualMemoryState extends State<VirtualMemory> {
     if (selectedProcessIndex != -1) {
       // Assuming each process has a reference to its PageTable
       PageTable? pageTable = ap.allProc[selectedProcessIndex]?.pt;
-      int result =
-          Algorithms.execute(ramMemory, currentTime, selectedProcessIndex, ap);
+      int result = Algorithms.execute(
+        ramMemory,
+        currentTime,
+        selectedProcessIndex,
+        ap,
+        chosenAlgorithm,
+      );
 
-      if (result == PAGE_NOT_ALREADY_MAPPED)
-        currentTime++;
-      else
-        print("Page already mapped\n");
+      //if (result == PAGE_NOT_ALREADY_MAPPED)
+      currentTime++;
+      //else
+      //print("Page already mapped\n");
       // Check if the PageTable is not null
       if (pageTable != null) {
         // Update the UI by triggering a rebuild
@@ -259,7 +270,9 @@ class _VirtualMemoryState extends State<VirtualMemory> {
                 _buildTextField("Physical Size", _cPhysSize),
                 _buildTextField("Virtual Size", _cVirtSize),
                 _buildTextField("# of offset bits", _cOffset),
-                _buildTextField("test", _cTest),
+
+                DropdownBtn(),
+
                 SizedBox(
                     height: 20), // Added spacing between text fields and button
                 Button(

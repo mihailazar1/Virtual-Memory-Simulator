@@ -23,22 +23,32 @@ class Algorithms {
     return lruPage;
   }
 
+  static int findFifoPage(List<RamRow> memoryRows) {
+    return 0;
+  }
+
   static void handlePageFault(Ram ramMemory, int currentTime, int processNumber,
-      int pageNumber, String content, PageTable pageTable) {
+      int pageNumber, String content, PageTable pageTable, String algorithm) {
     int frameNumber = ramMemory
         .findFreeFrame(); // Implement the logic to find a free frame or use a page replacement algorithm
     if (frameNumber == -1) {
       // No free frame, perform page replacement using the LRU algorithm from PageReplacementUtils
-      frameNumber = Algorithms.findLruPage(ramMemory.memoryRows);
+      if (algorithm == "LRU")
+        frameNumber = Algorithms.findLruPage(ramMemory.memoryRows);
+
+      if (algorithm == "FIFO")
+        frameNumber = Algorithms.findFifoPage(ramMemory.memoryRows);
     }
 
     // Load the new page into the selected frame
-    ramMemory.setRamEntry(frameNumber, content, processNumber, currentTime);
+    ramMemory.setRamEntry(
+        frameNumber, content, processNumber, pageNumber, currentTime);
     pageTable.setPageTableEntry(pageNumber, frameNumber);
   }
 
   static int execute(Ram ramMemory, int currentTime, int selectedProcessIndex,
-      AllProcesses ap) {
+      AllProcesses ap, String algorithm) {
+    print('execute!');
     Process? process = ap.allProc[selectedProcessIndex];
     List<VirtualAddress> va = process!.va;
     PageTable pageTable = process.pt;
@@ -55,10 +65,16 @@ class Algorithms {
       print(
           'Page requested not found in page table. Data will be loaded from Secondary Memory. TLB, Page Table and Physical Memory is updated accordingly\n');
       handlePageFault(ramMemory, currentTime, process.processNumber, pageNumber,
-          'Block: $content', pageTable);
+          'Block: $content', pageTable, algorithm);
 
       return PAGE_NOT_ALREADY_MAPPED;
     }
+
+    ramMemory.memoryRows[pageTable.getPageTableEntry(pageNumber)]
+        .setEntryTime(currentTime);
+
+    checkIfPageStillInRam(ramMemory, pageTable, pageNumber);
+
     return PAGE_ALREADY_MAPPED;
   }
 
@@ -70,5 +86,18 @@ class Algorithms {
     }
 
     return -1;
+  }
+
+  static void checkIfPageStillInRam(
+      //TODO NU CRED CA FUNCTIONEAZA BINE
+      // verifica daca nu cumva e outdatat entry-ul din page table
+      Ram ramMemory,
+      PageTable pageTable,
+      int pageNumber) {
+    if (ramMemory
+            .memoryRows[pageTable.getPageTableEntry(pageNumber)].pageNumber !=
+        pageTable.getPageTableEntry(pageNumber)) {
+      print("Page Table outdated!, needs replacement");
+    }
   }
 }

@@ -10,14 +10,10 @@ class Ram {
 
   Ram({required this.offsetBits, required this.physicalSize}) {
     ramLength = physicalSize ~/ pow(2, offsetBits);
-    memoryRows = List.generate(ramLength,
-        (index) => RamRow(data: '-', processNumber: -1, lastAccessTime: 0));
-  }
-
-  void setRamEntry(
-      int frameNumber, String data, int processNumber, int currentTime) {
-    memoryRows[frameNumber] = RamRow(
-        data: data, processNumber: processNumber, lastAccessTime: currentTime);
+    memoryRows = List.generate(
+        ramLength,
+        (index) => RamRow(
+            data: '-', processNumber: -1, pageNumber: -2, lastAccessTime: 0));
   }
 
   int findFreeFrame() {
@@ -27,6 +23,15 @@ class Ram {
       }
     }
     return -1;
+  }
+
+  void setRamEntry(int frameNumber, String data, int processNumber,
+      int pageNumber, int currentTime) {
+    memoryRows[frameNumber] = RamRow(
+        data: data,
+        processNumber: processNumber,
+        pageNumber: pageNumber,
+        lastAccessTime: currentTime);
   }
 
   RamRow getRamEntry(int frameNumber) {
