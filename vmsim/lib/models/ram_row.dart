@@ -2,7 +2,7 @@ class RamRow {
   String data;
   int processNumber;
   int pageNumber;
-  int lastAccessTime; // Timestamp or usage history
+  int lastAccessTime;
 
   RamRow({
     required this.data,

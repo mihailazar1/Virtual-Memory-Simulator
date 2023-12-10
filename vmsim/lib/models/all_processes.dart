@@ -22,7 +22,7 @@ class AllProcesses {
           offsetBits: this.offsetBits,
           virtualSize: this.virtualSize,
           processNumber: i,
-          numberVirtualAddr: 15);
+          numberVirtualAddr: 12);
     }
   }
 }
