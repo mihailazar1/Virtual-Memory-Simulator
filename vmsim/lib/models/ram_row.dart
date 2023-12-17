@@ -1,17 +1,17 @@
 class RamRow {
-  String data;
-  int processNumber;
-  int pageNumber;
-  int lastAccessTime;
+  String data; // 8 bits
+  //int processNumber;
+  //int pageNumber;
+  //int lastAccessTime; // Timestamp or usage history
 
   RamRow({
     required this.data,
-    required this.processNumber,
-    required this.lastAccessTime,
-    required this.pageNumber,
+    // required this.processNumber,
+    // required this.lastAccessTime,
+    // required this.pageNumber,
   });
 
-  void setEntryTime(int currentTime) {
-    lastAccessTime = currentTime;
-  }
+  // void setEntryTime(int currentTime) {
+  //  lastAccessTime = currentTime;
+  // }
 }

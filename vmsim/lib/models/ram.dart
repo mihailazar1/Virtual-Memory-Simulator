@@ -13,9 +13,11 @@ class Ram {
     memoryRows = List.generate(
         ramLength,
         (index) => RamRow(
-            data: '-', processNumber: -1, pageNumber: -2, lastAccessTime: 0));
+            data:
+                '-')); //processNumber: -1, pageNumber: -2, lastAccessTime: 0));
   }
 
+/*
   int findFreeFrame() {
     for (int i = 0; i < ramLength; i++) {
       if (memoryRows[i].processNumber == -1) {
@@ -24,14 +26,14 @@ class Ram {
     }
     return -1;
   }
+*/
 
   void setRamEntry(int frameNumber, String data, int processNumber,
       int pageNumber, int currentTime) {
-    memoryRows[frameNumber] = RamRow(
-        data: data,
-        processNumber: processNumber,
-        pageNumber: pageNumber,
-        lastAccessTime: currentTime);
+    memoryRows[frameNumber] = RamRow(data: data);
+    // processNumber: processNumber,
+    // pageNumber: pageNumber,
+    //  lastAccessTime: currentTime);
   }
 
   RamRow getRamEntry(int frameNumber) {

@@ -9,7 +9,7 @@ class Process {
   int virtualSize;
   int numberVirtualAddr;
   int processNumber;
-  late PageTable pt;
+  late PageTable pageTable;
   late List<VirtualAddress> va;
 
   Process(
@@ -17,7 +17,7 @@ class Process {
       required this.virtualSize,
       required this.numberVirtualAddr,
       required this.processNumber}) {
-    pt = PageTable(offsetBits: offsetBits, virtualSize: virtualSize);
+    pageTable = PageTable(offsetBits: offsetBits, virtualSize: virtualSize);
 
     generateVirtualAddr();
   }

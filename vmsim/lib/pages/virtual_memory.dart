@@ -5,10 +5,12 @@ import 'package:vmsim/algorithms/vmalgorithms.dart';
 import "package:vmsim/models/all_processes.dart";
 import "package:vmsim/models/page_table.dart";
 import "package:vmsim/models/ram.dart";
+import "package:vmsim/models/tlb.dart";
 import "package:vmsim/models/virtual_address.dart";
 import "package:vmsim/util/button.dart";
 import "package:vmsim/util/dropdown_button.dart";
 import "package:vmsim/util/my_text_field.dart";
+import "package:vmsim/models/LRUStack.dart";
 
 const int PAGE_NOT_ALREADY_MAPPED = 1;
 const int PAGE_ALREADY_MAPPED = 0;
@@ -21,13 +23,17 @@ class VirtualMemory extends StatefulWidget {
 }
 
 class _VirtualMemoryState extends State<VirtualMemory> {
-  int currentTime = 0;
+  int currentTime = 0; // Variable to keep track of the current time
 
   final _cProcesses = TextEditingController();
   final _cPhysSize = TextEditingController();
   final _cVirtSize = TextEditingController();
   final _cOffset = TextEditingController();
-  final _cTest = TextEditingController();
+  final _cTLBEntries = TextEditingController();
+  //final _cTest = TextEditingController();
+
+  StackLRU<int> lruStack = StackLRU();
+  TLB tlb = TLB(length: 0);
 
   String chosenAlgorithm = 'LRU';
 
@@ -40,7 +46,7 @@ class _VirtualMemoryState extends State<VirtualMemory> {
   );
 
   Ram ramMemory = Ram(offsetBits: 1, physicalSize: 1);
-  int selectedProcessIndex = -1;
+  int selectedProcessIndex = -1; // Index of the selected process
 
   void startSimulation() {
     ap = AllProcesses(
@@ -52,10 +58,18 @@ class _VirtualMemoryState extends State<VirtualMemory> {
     ramMemory = Ram(
         offsetBits: int.parse(_cOffset.text),
         physicalSize: int.parse(_cPhysSize.text));
-    _cTest.text = ap.allProc[0]!.va[0].p.toString();
+    //_cTest.text = ap.allProc[0]!.va[0].p.toString();
+
+    tlb = TLB(length: int.parse(_cTLBEntries.text));
+
+    //initialize stack
+    for (int i = 0; i < ramMemory.ramLength; i++) {
+      lruStack.push(i);
+    }
 
     setState(() {
-      selectedProcessIndex = -1;
+      selectedProcessIndex =
+          -1; // Reset the selected process index when starting a new simulation
     });
   }
 
@@ -63,7 +77,7 @@ class _VirtualMemoryState extends State<VirtualMemory> {
     return Padding(
       padding: const EdgeInsets.only(left: 15, bottom: 15),
       child: SizedBox(
-        width: 200,
+        width: 200, // Increased width for better readability
         child: MyTextField(
           hintText: hintText,
           controller: controller,
@@ -76,7 +90,7 @@ class _VirtualMemoryState extends State<VirtualMemory> {
     return Expanded(
       child: Container(
         width: 200,
-        height: 300,
+        height: 300, // Adjust the width as needed
         child: ListView.builder(
           itemCount: ap.allProc?.length ?? 0,
           itemBuilder: (context, index) => ListTile(
@@ -94,13 +108,14 @@ class _VirtualMemoryState extends State<VirtualMemory> {
 
   Widget buildPageTable() {
     if (selectedProcessIndex == -1) {
-      return Container();
+      return Container(); // Empty container when no process is selected
     }
 
-    PageTable? pageTable = ap.allProc?[selectedProcessIndex]?.pt;
+    // Assuming AllProcesses has a List of PageTables
+    PageTable? pageTable = ap.allProc?[selectedProcessIndex]?.pageTable;
 
     if (pageTable == null) {
-      return Container();
+      return Container(); // Empty container when no PageTable is available for the selected process
     }
 
     return SingleChildScrollView(
@@ -112,6 +127,7 @@ class _VirtualMemoryState extends State<VirtualMemory> {
             columns: [
               DataColumn(label: Text('Page Number')),
               DataColumn(label: Text('Frame Number')),
+              DataColumn(label: Text('Valid Bit')),
             ],
             rows: List.generate(
               pageTable.length,
@@ -119,6 +135,7 @@ class _VirtualMemoryState extends State<VirtualMemory> {
                 cells: [
                   DataCell(Text('$index')),
                   DataCell(Text('${pageTable.pages?[index]}')),
+                  DataCell(Text('${pageTable.validInvalid?[index]}')),
                 ],
               ),
             ),
@@ -139,7 +156,6 @@ class _VirtualMemoryState extends State<VirtualMemory> {
           DataTable(
             columns: [
               DataColumn(label: Text('Frame #')),
-              DataColumn(label: Text('Process #')),
               DataColumn(label: Text('Data')),
             ],
             rows: List.generate(
@@ -147,9 +163,39 @@ class _VirtualMemoryState extends State<VirtualMemory> {
               (index) => DataRow(
                 cells: [
                   DataCell(Text('$index')),
-                  DataCell(
-                      Text('${ramMemory.getRamEntry(index).processNumber}')),
+                  // DataCell(
+                  //    Text('${ramMemory.getRamEntry(index).processNumber}')),
                   DataCell(Text(ramMemory.getRamEntry(index).data)),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildTLB() {
+    if (tlb.length == 0) return Container();
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.vertical,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          DataTable(
+            columns: [
+              DataColumn(label: Text('Page #')),
+              DataColumn(label: Text('Frame #')),
+              DataColumn(label: Text('Process #')),
+            ],
+            rows: List.generate(
+              ramMemory.ramLength,
+              (index) => DataRow(
+                cells: [
+                  DataCell(Text('${tlb.entries[index].virtualPage}')),
+                  DataCell(Text('${tlb.entries[index].physicalPage}')),
+                  DataCell(Text('${tlb.entries[index].pid}')),
                 ],
               ),
             ),
@@ -161,14 +207,14 @@ class _VirtualMemoryState extends State<VirtualMemory> {
 
   Widget buildVirtualAddresses() {
     if (selectedProcessIndex == -1) {
-      return Container();
+      return Container(); // Display nothing if no process is selected
     }
 
     List<VirtualAddress>? virtualAddresses =
         ap.allProc[selectedProcessIndex]?.va;
 
     if (virtualAddresses == null) {
-      return Container();
+      return Container(); // Display nothing if virtual addresses are not available
     }
 
     return Column(
@@ -187,6 +233,7 @@ class _VirtualMemoryState extends State<VirtualMemory> {
                   text: '${address.p}',
                   style: TextStyle(
                     color: address.executed == true ? Colors.green : Colors.red,
+                    // Add other styles if needed
                   ),
                 ),
                 TextSpan(
@@ -197,6 +244,7 @@ class _VirtualMemoryState extends State<VirtualMemory> {
                   text: '${address.d}',
                   style: TextStyle(
                     color: address.executed == true ? Colors.green : Colors.red,
+                    // Add other styles if needed
                   ),
                 ),
               ],
@@ -207,20 +255,24 @@ class _VirtualMemoryState extends State<VirtualMemory> {
   }
 
   void executeInstruction() {
+    // Check if a process is selected
     if (selectedProcessIndex != -1) {
-      PageTable? pageTable = ap.allProc[selectedProcessIndex]?.pt;
-      int result = Algorithms.execute(
-        ramMemory,
-        currentTime,
-        selectedProcessIndex,
-        ap,
-        chosenAlgorithm,
-      );
+      // Assuming each process has a reference to its PageTable
+      PageTable? pageTable = ap.allProc[selectedProcessIndex]?.pageTable;
+      int result = Algorithms.execute(ramMemory, currentTime,
+          selectedProcessIndex, ap, chosenAlgorithm, lruStack);
 
+      //if (result == PAGE_NOT_ALREADY_MAPPED)
       currentTime++;
-
+      //else
+      //print("Page already mapped\n");
+      // Check if the PageTable is not null
       if (pageTable != null) {
-        setState(() {});
+        // Update the UI by triggering a rebuild
+        setState(() {
+          // Update the RAM memory (you need to implement this method in your Ram class)
+          //ramMemory.updateFromPageTable(pageTable);
+        });
       }
     }
   }
@@ -247,7 +299,7 @@ class _VirtualMemoryState extends State<VirtualMemory> {
         ),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20), // Added padding for better spacing
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -257,15 +309,21 @@ class _VirtualMemoryState extends State<VirtualMemory> {
                 _buildTextField("Physical Size", _cPhysSize),
                 _buildTextField("Virtual Size", _cVirtSize),
                 _buildTextField("# of offset bits", _cOffset),
+                _buildTextField("TLB entries", _cTLBEntries),
+
                 DropdownBtn(),
-                SizedBox(height: 20),
+
+                SizedBox(
+                    height: 20), // Added spacing between text fields and button
                 Button(
                   text: "Start Simulation",
                   onPressed: startSimulation,
                 ),
-                SizedBox(height: 30),
-                buildProcessList(),
+
+                SizedBox(height: 30), // Added spacing before the process list
+                buildProcessList(), // Display the list of processes
                 SizedBox(height: 20),
+
                 buildVirtualAddresses(),
                 Text(
                   'Current simulation time: $currentTime',
@@ -276,7 +334,10 @@ class _VirtualMemoryState extends State<VirtualMemory> {
               ],
             ),
             const SizedBox(width: 20),
-            buildPageTable(),
+            buildTLB(),
+
+            buildPageTable(), // Display the Page Table for the selected process
+
             buildRamTable(),
           ],
         ),
