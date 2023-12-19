@@ -21,10 +21,6 @@ class PageTable {
     this.lastToColor = pageNumber;
   }
 
-  int getPageTableEntry(int pageNumber) {
-    return pages[pageNumber];
-  }
-
   bool isValid(int pageNumber) {
     if (validInvalid[pageNumber] == 0) return false;
     return true;

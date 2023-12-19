@@ -18,6 +18,7 @@ class TLB {
 
   void addTLBEntry(int pageNumber, int frameNumber, int processNumber) {
     // assumes that the entry is not already in the tlb
+
     bool found = false;
 
     for (int i = 0; i < entries.length; i++) {
@@ -29,22 +30,11 @@ class TLB {
     }
 
     if (found == false) {
-      // pick a random one
       var random = Random();
 
       int entryToReplace = random.nextInt(this.length);
       justAdd(entryToReplace, pageNumber, frameNumber, processNumber);
     }
-
-    /*
-    for (int i = 0; i < entries.length; i++) {
-      if (entries[i].virtualPage == pageNumber &&
-          entries[i].pid == processNumber) {
-        print('hit!\n');
-
-      }
-    }
-    */
   }
 
   void justAdd(int index, int pageNumber, int frameNumber, int processNumber) {

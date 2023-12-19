@@ -11,11 +11,7 @@ class Ram {
 
   Ram({required this.offsetBits, required this.physicalSize}) {
     ramLength = physicalSize ~/ pow(2, offsetBits);
-    memoryRows = List.generate(
-        ramLength,
-        (index) => RamRow(
-            data:
-                '-')); //processNumber: -1, pageNumber: -2, lastAccessTime: 0));
+    memoryRows = List.generate(ramLength, (index) => RamRow(data: '-'));
   }
 
 /*

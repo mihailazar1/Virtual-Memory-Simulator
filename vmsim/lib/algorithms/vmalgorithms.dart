@@ -35,27 +35,22 @@ class Algorithms {
     va[nextAddr].executed = true;
 
     if (mappingNotInTLBorInvalid(tlb, pageNumber, process.processNumber)) {
-      print('tlb miss :(((((((\n');
+      print('tlb miss!');
       tlb.hit = 0;
 
       if (pageTable.isValid(pageNumber) == false) {
         // The page is not mapped
-        print(
-            'Page requested not found in page table. Data will be loaded from Secondary Memory. TLB, Page Table and Physical Memory is updated accordingly\n');
+        // print(
+        //     'Page requested not found in page table. Data will be loaded from Secondary Memory. TLB, Page Table and Physical Memory is updated accordingly\n');
         handlePageFault(ramMemory, process, tlb, pageNumber, 'Block: $content',
             pageTable, algorithm, lruStack, ap);
 
-        print('page number $pageNumber \n');
+        // print('page number $pageNumber \n');
 
         lruStack.printStack();
         return PAGE_NOT_ALREADY_MAPPED;
       }
 
-      //ramMemory.memoryRows[pageTable.getPageTableEntry(pageNumber)]
-      //    .setEntryTime(currentTime);
-
-      //checkIfPageStillInRam(ramMemory, currentTime, process, 'Block: $content',
-      //   pageTable, algorithm, pageNumber);
       tlb.addTLBEntry(
           pageNumber, pageTable.pages[pageNumber], process.processNumber);
       accessFrame(lruStack, pageTable.pages[pageNumber]);
@@ -69,6 +64,8 @@ class Algorithms {
       return PAGE_FOUND_IN_TLB;
     }
   }
+
+  //TODO================================================================================
 
   static void handlePageFault(
       Ram ramMemory,
@@ -84,15 +81,14 @@ class Algorithms {
         ramMemory); // Implement the logic to find a free frame or use a page replacement algorithm
 
     if (frameNumber == -1) {
-      // No free frame, perform page replacement using the LRU algorithm from PageReplacementUtils
+      // No free frame, find free frame with an algorithm
       if (algorithm == "LRU") frameNumber = Algorithms.findLRUPage(lruStack);
 
       //if (algorithm == "FIFO")
       // frameNumber = Algorithms.findFifoPage(ramMemory.memoryRows);
     }
 
-    // Load the new page into the selected frame
-
+    // in case a RAM frame is overwritten by another process, go to each Page Table and update. Do the same for the TLB
     for (int i = 0; i < allProcesses.noProc; i++) {
       Process? process = allProcesses.allProc[i];
       PageTable iterPageTable = process!.pageTable;
@@ -102,12 +98,19 @@ class Algorithms {
     }
 
     setRAMEntry(ramMemory, frameNumber, content);
+
     tlb.addTLBEntry(pageNumber, frameNumber, process.processNumber);
+
     accessFrame(lruStack,
         frameNumber); // after frame is accessed, move it on top of stack
-    toggleValidBit(pageTable, pageNumber);
-    pageTable.setPageTableEntry(pageNumber, frameNumber);
+
+    toggleValidBit(pageTable, pageNumber); // set valid bit to 1
+
+    pageTable.setPageTableEntry(
+        pageNumber, frameNumber); // update the page table
   }
+
+  //TODO================================================================================
 
   static bool mappingNotInTLBorInvalid(
       TLB tlb, int pageNumber, int processNumber) {
