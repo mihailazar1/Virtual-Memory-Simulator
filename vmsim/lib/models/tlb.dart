@@ -6,17 +6,18 @@ import 'package:vmsim/models/tlb_entry.dart';
 
 class TLB {
   int length;
+  int hit = -1;
   late List<TLBEntry> entries = [];
 
   TLB({required this.length}) {
     entries = List.generate(
         length,
-        (index) =>
-            TLBEntry(virtualPage: -1, physicalPage: -1, pid: -1, empty: 1));
+        (index) => TLBEntry(
+            virtualPage: -1, physicalPage: -1, valid: 0, pid: -1, empty: 1));
   }
 
   void addTLBEntry(int pageNumber, int frameNumber, int processNumber) {
-    // assume that the entry is not already in the tlb
+    // assumes that the entry is not already in the tlb
     bool found = false;
 
     for (int i = 0; i < entries.length; i++) {
@@ -49,6 +50,7 @@ class TLB {
   void justAdd(int index, int pageNumber, int frameNumber, int processNumber) {
     entries[index].virtualPage = pageNumber;
     entries[index].physicalPage = frameNumber;
+    entries[index].valid = 1;
     entries[index].pid = processNumber;
     entries[index].empty = 0;
   }

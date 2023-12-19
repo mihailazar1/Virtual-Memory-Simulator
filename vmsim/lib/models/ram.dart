@@ -5,6 +5,7 @@ import 'package:vmsim/models/ram_row.dart';
 class Ram {
   int offsetBits;
   int physicalSize;
+  int lastToColor = -1;
   List<RamRow> memoryRows = [];
   late int ramLength;
 

@@ -1,8 +1,11 @@
+// ignore_for_file: unnecessary_this
+
 import 'dart:math';
 
 class PageTable {
   int offsetBits;
   int virtualSize;
+  int lastToColor = -1;
   late List<int> pages;
   late List<int> validInvalid;
   late int length;
@@ -15,6 +18,7 @@ class PageTable {
 
   void setPageTableEntry(int pageNumber, int frameNumber) {
     pages[pageNumber] = frameNumber;
+    this.lastToColor = pageNumber;
   }
 
   int getPageTableEntry(int pageNumber) {

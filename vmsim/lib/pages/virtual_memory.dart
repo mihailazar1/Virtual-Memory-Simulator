@@ -25,11 +25,12 @@ class VirtualMemory extends StatefulWidget {
 class _VirtualMemoryState extends State<VirtualMemory> {
   int currentTime = 0; // Variable to keep track of the current time
 
-  final _cProcesses = TextEditingController();
-  final _cPhysSize = TextEditingController();
-  final _cVirtSize = TextEditingController();
-  final _cOffset = TextEditingController();
-  final _cTLBEntries = TextEditingController();
+  final _cProcesses = TextEditingController()..text = '2';
+  final _cPhysSize = TextEditingController()..text = '32';
+  final _cVirtSize = TextEditingController()..text = '64';
+  final _cOffset = TextEditingController()..text = '2';
+  final _cTLBEntries = TextEditingController()..text = '8';
+
   //final _cTest = TextEditingController();
 
   StackLRU<int> lruStack = StackLRU();
@@ -54,6 +55,7 @@ class _VirtualMemoryState extends State<VirtualMemory> {
       virtualSize: int.parse(_cVirtSize.text),
       noProc: int.parse(_cProcesses.text),
     );
+    print(int.parse(_cTLBEntries.text));
 
     ramMemory = Ram(
         offsetBits: int.parse(_cOffset.text),
@@ -133,9 +135,36 @@ class _VirtualMemoryState extends State<VirtualMemory> {
               pageTable.length,
               (index) => DataRow(
                 cells: [
-                  DataCell(Text('$index')),
-                  DataCell(Text('${pageTable.pages?[index]}')),
-                  DataCell(Text('${pageTable.validInvalid?[index]}')),
+                  DataCell(Text(
+                    '$index',
+                    style: TextStyle(
+                        color: (pageTable.lastToColor == index)
+                            ? Colors.green
+                            : Colors.black,
+                        fontWeight: (pageTable.lastToColor == index)
+                            ? FontWeight.bold
+                            : FontWeight.normal),
+                  )),
+                  DataCell(Text(
+                    '${pageTable.pages?[index]}',
+                    style: TextStyle(
+                        color: (pageTable.lastToColor == index)
+                            ? Colors.green
+                            : Colors.black,
+                        fontWeight: (pageTable.lastToColor == index)
+                            ? FontWeight.bold
+                            : FontWeight.normal),
+                  )),
+                  DataCell(Text(
+                    '${pageTable.validInvalid?[index]}',
+                    style: TextStyle(
+                        color: (pageTable.lastToColor == index)
+                            ? Colors.green
+                            : Colors.black,
+                        fontWeight: (pageTable.lastToColor == index)
+                            ? FontWeight.bold
+                            : FontWeight.normal),
+                  )),
                 ],
               ),
             ),
@@ -165,7 +194,13 @@ class _VirtualMemoryState extends State<VirtualMemory> {
                   DataCell(Text('$index')),
                   // DataCell(
                   //    Text('${ramMemory.getRamEntry(index).processNumber}')),
-                  DataCell(Text(ramMemory.getRamEntry(index).data)),
+                  DataCell(Text(
+                    ramMemory.getRamEntry(index).data,
+                    style: TextStyle(
+                        color: (ramMemory.lastToColor == index)
+                            ? Colors.green
+                            : Colors.black),
+                  )),
                 ],
               ),
             ),
@@ -185,17 +220,66 @@ class _VirtualMemoryState extends State<VirtualMemory> {
         children: [
           DataTable(
             columns: [
-              DataColumn(label: Text('Page #')),
-              DataColumn(label: Text('Frame #')),
-              DataColumn(label: Text('Process #')),
+              DataColumn(
+                label: Text(
+                  'Page #',
+                  style: TextStyle(
+                    color: (tlb.hit == 1)
+                        ? Colors.green
+                        : (tlb.hit == -1)
+                            ? Colors.black
+                            : Colors.red,
+                  ),
+                ),
+              ),
+              DataColumn(
+                label: Text(
+                  'Frame #',
+                  style: TextStyle(
+                    color: (tlb.hit == 1)
+                        ? Colors.green
+                        : (tlb.hit == -1)
+                            ? Colors.black
+                            : Colors.red,
+                  ),
+                ),
+              ),
+              DataColumn(
+                label: Text(
+                  'Process #',
+                  style: TextStyle(
+                    color: (tlb.hit == 1)
+                        ? Colors.green
+                        : (tlb.hit == -1)
+                            ? Colors.black
+                            : Colors.red,
+                  ),
+                ),
+              ),
+              DataColumn(
+                label: Text(
+                  'Valid',
+                  style: TextStyle(
+                    color: (tlb.hit == 1)
+                        ? Colors.green
+                        : (tlb.hit == -1)
+                            ? Colors.black
+                            : Colors.red,
+                  ),
+                ),
+              ),
             ],
             rows: List.generate(
-              ramMemory.ramLength,
+              tlb.length,
               (index) => DataRow(
                 cells: [
                   DataCell(Text('${tlb.entries[index].virtualPage}')),
                   DataCell(Text('${tlb.entries[index].physicalPage}')),
                   DataCell(Text('${tlb.entries[index].pid}')),
+                  DataCell(
+                    Text('${tlb.entries[index].valid}'),
+                    // Set the color based on the tlb.hit variable
+                  ),
                 ],
               ),
             ),
@@ -259,7 +343,7 @@ class _VirtualMemoryState extends State<VirtualMemory> {
     if (selectedProcessIndex != -1) {
       // Assuming each process has a reference to its PageTable
       PageTable? pageTable = ap.allProc[selectedProcessIndex]?.pageTable;
-      int result = Algorithms.execute(ramMemory, currentTime,
+      int result = Algorithms.execute(ramMemory, tlb, currentTime,
           selectedProcessIndex, ap, chosenAlgorithm, lruStack);
 
       //if (result == PAGE_NOT_ALREADY_MAPPED)
@@ -280,7 +364,7 @@ class _VirtualMemoryState extends State<VirtualMemory> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 194, 177, 225),
+      backgroundColor: Color.fromARGB(255, 242, 242, 242),
       appBar: AppBar(
         title: const Center(
           child: Text(

@@ -7,14 +7,22 @@ import 'package:vmsim/models/page_table.dart';
 import 'package:vmsim/models/process.dart';
 import 'package:vmsim/models/ram.dart';
 import 'package:vmsim/models/ram_row.dart';
+import 'package:vmsim/models/tlb.dart';
 import 'package:vmsim/models/virtual_address.dart';
 
+const int PAGE_FOUND_IN_TLB = 2;
 const int PAGE_NOT_ALREADY_MAPPED = 1;
 const int PAGE_ALREADY_MAPPED = 0;
 
 class Algorithms {
-  static int execute(Ram ramMemory, int currentTime, int selectedProcessIndex,
-      AllProcesses ap, String algorithm, StackLRU lruStack) {
+  static int execute(
+      Ram ramMemory,
+      TLB tlb,
+      int currentTime,
+      int selectedProcessIndex,
+      AllProcesses ap,
+      String algorithm,
+      StackLRU lruStack) {
     Process? process = ap.allProc[selectedProcessIndex];
     List<VirtualAddress> va = process!.va;
     PageTable pageTable = process.pageTable;
@@ -26,32 +34,46 @@ class Algorithms {
 
     va[nextAddr].executed = true;
 
-    if (pageTable.isValid(pageNumber) == false) {
-      // The page is not mapped
-      print(
-          'Page requested not found in page table. Data will be loaded from Secondary Memory. TLB, Page Table and Physical Memory is updated accordingly\n');
-      handlePageFault(ramMemory, pageNumber, 'Block: $content', pageTable,
-          algorithm, lruStack, ap);
+    if (mappingNotInTLBorInvalid(tlb, pageNumber, process.processNumber)) {
+      print('tlb miss :(((((((\n');
+      tlb.hit = 0;
 
-      print('page number $pageNumber \n');
+      if (pageTable.isValid(pageNumber) == false) {
+        // The page is not mapped
+        print(
+            'Page requested not found in page table. Data will be loaded from Secondary Memory. TLB, Page Table and Physical Memory is updated accordingly\n');
+        handlePageFault(ramMemory, process, tlb, pageNumber, 'Block: $content',
+            pageTable, algorithm, lruStack, ap);
 
+        print('page number $pageNumber \n');
+
+        lruStack.printStack();
+        return PAGE_NOT_ALREADY_MAPPED;
+      }
+
+      //ramMemory.memoryRows[pageTable.getPageTableEntry(pageNumber)]
+      //    .setEntryTime(currentTime);
+
+      //checkIfPageStillInRam(ramMemory, currentTime, process, 'Block: $content',
+      //   pageTable, algorithm, pageNumber);
+      tlb.addTLBEntry(
+          pageNumber, pageTable.pages[pageNumber], process.processNumber);
+      accessFrame(lruStack, pageTable.pages[pageNumber]);
       lruStack.printStack();
-      return PAGE_NOT_ALREADY_MAPPED;
+      return PAGE_ALREADY_MAPPED;
+    } else {
+      print('TLB HIT!\n');
+      tlb.hit = 1;
+      accessFrame(lruStack, pageTable.pages[pageNumber]);
+      lruStack.printStack();
+      return PAGE_FOUND_IN_TLB;
     }
-
-    //ramMemory.memoryRows[pageTable.getPageTableEntry(pageNumber)]
-    //    .setEntryTime(currentTime);
-
-    //checkIfPageStillInRam(ramMemory, currentTime, process, 'Block: $content',
-    //   pageTable, algorithm, pageNumber);
-
-    accessFrame(lruStack, pageTable.pages[pageNumber]);
-    lruStack.printStack();
-    return PAGE_ALREADY_MAPPED;
   }
 
   static void handlePageFault(
       Ram ramMemory,
+      Process process,
+      TLB tlb,
       int pageNumber,
       String content,
       PageTable pageTable,
@@ -75,12 +97,31 @@ class Algorithms {
       Process? process = allProcesses.allProc[i];
       PageTable iterPageTable = process!.pageTable;
       updatePageTableToReflectFrameWasMovedToDisk(iterPageTable, frameNumber);
+      updateTLBtoReflectFrameWasMovedToDisk(
+          tlb, frameNumber, process.processNumber);
     }
 
     setRAMEntry(ramMemory, frameNumber, content);
-    accessFrame(lruStack, frameNumber);
+    tlb.addTLBEntry(pageNumber, frameNumber, process.processNumber);
+    accessFrame(lruStack,
+        frameNumber); // after frame is accessed, move it on top of stack
     toggleValidBit(pageTable, pageNumber);
     pageTable.setPageTableEntry(pageNumber, frameNumber);
+  }
+
+  static bool mappingNotInTLBorInvalid(
+      TLB tlb, int pageNumber, int processNumber) {
+    for (int i = 0; i < tlb.length; i++) {
+      if (tlb.entries[i].virtualPage == pageNumber &&
+          tlb.entries[i].pid == processNumber) {
+        if (tlb.entries[i].valid == 0) {
+          return true;
+        }
+        return false;
+      }
+    }
+
+    return true;
   }
 
   static int findLRUPage(StackLRU lruStack) {
@@ -112,6 +153,7 @@ class Algorithms {
 
   static void setRAMEntry(Ram ramMemory, int frameNumber, String content) {
     ramMemory.memoryRows[frameNumber].data = content;
+    ramMemory.lastToColor = frameNumber;
   }
 
   static void toggleValidBit(PageTable pageTable, int pageNumber) {
@@ -127,6 +169,16 @@ class Algorithms {
       if (pageTable.pages[i] == frameNumber) {
         pageTable.validInvalid[i] = 0;
       }
+  }
+
+  static void updateTLBtoReflectFrameWasMovedToDisk(
+      TLB tlb, int frameNumber, int processNumber) {
+    for (int i = 0; i < tlb.length; i++) {
+      if (tlb.entries[i].physicalPage == frameNumber &&
+          tlb.entries[i].pid == processNumber) {
+        tlb.entries[i].valid = 0;
+      }
+    }
   }
 
   /*
