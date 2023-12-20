@@ -1,6 +1,9 @@
-// ignore_for_file: curly_braces_in_flow_control_structures
+// ignore_for_file: curly_braces_in_flow_control_structures, constant_identifier_names
+
+import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:vmsim/models/FIFOqueue.dart';
 import 'package:vmsim/models/LRUStack.dart';
 import 'package:vmsim/models/all_processes.dart';
 import 'package:vmsim/models/page_table.dart';
@@ -18,11 +21,11 @@ class Algorithms {
   static int execute(
       Ram ramMemory,
       TLB tlb,
-      int currentTime,
       int selectedProcessIndex,
       AllProcesses ap,
       String algorithm,
-      StackLRU lruStack) {
+      StackLRU lruStack,
+      FIFOQueue fifoQueue) {
     Process? process = ap.allProc[selectedProcessIndex];
     List<VirtualAddress> va = process!.va;
     PageTable pageTable = process.pageTable;
@@ -39,28 +42,33 @@ class Algorithms {
       tlb.hit = 0;
 
       if (pageTable.isValid(pageNumber) == false) {
-        // The page is not mapped
-        // print(
-        //     'Page requested not found in page table. Data will be loaded from Secondary Memory. TLB, Page Table and Physical Memory is updated accordingly\n');
         handlePageFault(ramMemory, process, tlb, pageNumber, 'Block: $content',
-            pageTable, algorithm, lruStack, ap);
+            pageTable, algorithm, lruStack, fifoQueue, ap);
 
-        // print('page number $pageNumber \n');
-
-        lruStack.printStack();
+        //lruStack.printStack();
+        //fifoQueue.printQueue();
         return PAGE_NOT_ALREADY_MAPPED;
       }
 
       tlb.addTLBEntry(
           pageNumber, pageTable.pages[pageNumber], process.processNumber);
-      accessFrame(lruStack, pageTable.pages[pageNumber]);
-      lruStack.printStack();
+
+      if (algorithm == "LRU") {
+        accessFrame(lruStack, pageTable.pages[pageNumber]);
+      }
+      //lruStack.printStack();
+      //fifoQueue.printQueue();
       return PAGE_ALREADY_MAPPED;
     } else {
       print('TLB HIT!\n');
       tlb.hit = 1;
-      accessFrame(lruStack, pageTable.pages[pageNumber]);
-      lruStack.printStack();
+
+      if (algorithm == "LRU") {
+        accessFrame(lruStack, pageTable.pages[pageNumber]);
+      }
+
+      //lruStack.printStack();
+
       return PAGE_FOUND_IN_TLB;
     }
   }
@@ -76,16 +84,27 @@ class Algorithms {
       PageTable pageTable,
       String algorithm,
       StackLRU lruStack,
+      FIFOQueue fifoQueue,
       AllProcesses allProcesses) {
     int frameNumber = findFreeFrame(
         ramMemory); // Implement the logic to find a free frame or use a page replacement algorithm
 
     if (frameNumber == -1) {
       // No free frame, find free frame with an algorithm
-      if (algorithm == "LRU") frameNumber = Algorithms.findLRUPage(lruStack);
+      if (algorithm == "LRU") {
+        frameNumber = Algorithms.findLRUPage(lruStack);
+        print("ALGO IS LRU");
+      }
 
-      //if (algorithm == "FIFO")
-      // frameNumber = Algorithms.findFifoPage(ramMemory.memoryRows);
+      if (algorithm == "FIFO") {
+        frameNumber = Algorithms.findFIFOPage(fifoQueue);
+        print("ALGO IS FIFO");
+      }
+
+      if (algorithm == "RANDOM") {
+        frameNumber = Algorithms.findRANDOMPage(ramMemory.ramLength);
+        print("ALGO IS RANDOM");
+      }
     }
 
     // in case a RAM frame is overwritten by another process, go to each Page Table and update. Do the same for the TLB
@@ -101,8 +120,10 @@ class Algorithms {
 
     tlb.addTLBEntry(pageNumber, frameNumber, process.processNumber);
 
-    accessFrame(lruStack,
-        frameNumber); // after frame is accessed, move it on top of stack
+    if (algorithm == "LRU") {
+      accessFrame(lruStack, frameNumber);
+    }
+    // after frame is accessed, move it on top of stack
 
     toggleValidBit(pageTable, pageNumber); // set valid bit to 1
 
@@ -125,12 +146,6 @@ class Algorithms {
     }
 
     return true;
-  }
-
-  static int findLRUPage(StackLRU lruStack) {
-    int page = lruStack.lru();
-    accessFrame(lruStack, page);
-    return page;
   }
 
   static void accessFrame(StackLRU lruStack, int page) {
@@ -184,88 +199,22 @@ class Algorithms {
     }
   }
 
-  /*
-  static int findLruPage(List<RamRow> memoryRows) {
-    int minTime = memoryRows[0].lastAccessTime;
-    int lruPage = 0;
-
-    for (int i = 1; i < memoryRows.length; i++) {
-      if (memoryRows[i].lastAccessTime < minTime) {
-        minTime = memoryRows[i].lastAccessTime;
-        lruPage = i;
-      }
-    }
-
-    return lruPage;
+  static int findLRUPage(StackLRU lruStack) {
+    int page = lruStack.lru();
+    accessFrame(lruStack, page);
+    return page;
   }
 
-  static int findFifoPage(List<RamRow> memoryRows) {
-    return 0;
+  static int findFIFOPage(FIFOQueue fifoQueue) {
+    int page = fifoQueue.dequeue();
+    fifoQueue.enqueue(page);
+    return page;
   }
 
-  
+  static int findRANDOMPage(int ramLength) {
+    Random random = Random();
+    int page = random.nextInt(ramLength);
 
-  static int execute(Ram ramMemory, int currentTime, int selectedProcessIndex,
-      AllProcesses ap, String algorithm) {
-    print('execute!');
-    Process? process = ap.allProc[selectedProcessIndex];
-    List<VirtualAddress> va = process!.va;
-    PageTable pageTable = process.pt;
-
-    int nextAddr = getNextAddress(va);
-
-    int content = va[nextAddr].getPageNumber(); // contents to place in RAM
-    int pageNumber = va[nextAddr].getPageNumber();
-
-    va[nextAddr].executed = true;
-
-    if (pageTable.getPageTableEntry(pageNumber) == -1) {
-      // The page is not mapped
-      print(
-          'Page requested not found in page table. Data will be loaded from Secondary Memory. TLB, Page Table and Physical Memory is updated accordingly\n');
-      handlePageFault(ramMemory, currentTime, process.processNumber, pageNumber,
-          'Block: $content', pageTable, algorithm);
-
-      return PAGE_NOT_ALREADY_MAPPED;
-    }
-
-    ramMemory.memoryRows[pageTable.getPageTableEntry(pageNumber)]
-        .setEntryTime(currentTime);
-
-    checkIfPageStillInRam(ramMemory, currentTime, process, 'Block: $content',
-        pageTable, algorithm, pageNumber);
-
-    return PAGE_ALREADY_MAPPED;
+    return page;
   }
-
-  
-
-  static void checkIfPageStillInRam(
-      //TODO NU CRED CA FUNCTIONEAZA BINE
-      // verifica daca nu cumva e outdatat entry-ul din page table
-      Ram ramMemory,
-      int currentTime,
-      Process p,
-      String content,
-      PageTable pageTable,
-      String algorithm,
-      int pageNumber) {
-    if (ramMemory.memoryRows[pageTable.getPageTableEntry(pageNumber)]
-                .pageNumber !=
-            pageNumber ||
-        ramMemory.memoryRows[pageTable.getPageTableEntry(pageNumber)]
-                .processNumber !=
-            p.processNumber) {
-      print("Page Table outdated!, needs replacement\n");
-
-      print(ramMemory
-          .memoryRows[pageTable.getPageTableEntry(pageNumber)].pageNumber);
-      print('\n');
-      print(pageNumber);
-
-      handlePageFault(ramMemory, currentTime, p.processNumber, pageNumber,
-          content.toString(), pageTable, algorithm);
-    }
-  }
-  */
 }

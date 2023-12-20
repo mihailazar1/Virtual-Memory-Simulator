@@ -1,54 +1,52 @@
 class StackLRU<T> {
-  List<T> _data = [];
+  List<T> data = [];
 
-  /// Pushes an element onto the stack
+  // Pushes an element onto the stack
   void push(T element) {
-    _data.add(element);
+    data.add(element);
   }
 
-  /// Pops the top element off the stack
+  // Pops the top element off the stack
   T pop() {
-    if (_data.isEmpty) {
+    if (data.isEmpty) {
       throw Exception('Stack is empty');
     }
 
-    return _data.removeLast();
+    return data.removeLast();
   }
 
-  /// Returns the top element of the stack (without removing it)
+  // Returns the top element of the stack without removing it
   T peek() {
-    if (_data.isEmpty) {
+    if (data.isEmpty) {
       throw Exception('Stack is empty');
     }
-    return _data.last;
+    return data.last;
   }
 
   T lru() {
-    if (_data.isEmpty) {
+    if (data.isEmpty) {
       throw Exception('Stack is empty');
     }
-    return _data.first;
+    return data.first;
   }
 
-  /// Moves an element to the top of the stack
   void moveToTop(T element) {
-    if (!_data.contains(element)) {
+    if (!data.contains(element)) {
       throw Exception('Element not found in the stack');
     }
 
-    for (int i = _data.length - 1; i >= 0; i--) {
-      if (_data[i] == element) {
-        // Move the element to the top
-        T topElement = _data.removeAt(i);
-        _data.insert(_data.length, topElement);
+    for (int i = data.length - 1; i >= 0; i--) {
+      if (data[i] == element) {
+        T topElement = data.removeAt(i);
+        data.insert(data.length, topElement);
         break;
       }
     }
   }
 
   void printStack() {
-    for (int i = _data.length - 1; i >= 0; i--) {
-      print(_data[i]);
+    for (int i = data.length - 1; i >= 0; i--) {
+      print(data[i]);
       print(' ');
     }
 

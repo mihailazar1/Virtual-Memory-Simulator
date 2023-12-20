@@ -1,7 +1,8 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
+// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, constant_identifier_names
 
 import "package:flutter/material.dart";
 import 'package:vmsim/algorithms/vmalgorithms.dart';
+import "package:vmsim/models/FIFOqueue.dart";
 import "package:vmsim/models/all_processes.dart";
 import "package:vmsim/models/page_table.dart";
 import "package:vmsim/models/ram.dart";
@@ -23,17 +24,15 @@ class VirtualMemory extends StatefulWidget {
 }
 
 class _VirtualMemoryState extends State<VirtualMemory> {
-  int currentTime = 0; // Variable to keep track of the current time
-
   final _cProcesses = TextEditingController()..text = '2';
   final _cPhysSize = TextEditingController()..text = '32';
   final _cVirtSize = TextEditingController()..text = '64';
   final _cOffset = TextEditingController()..text = '2';
   final _cTLBEntries = TextEditingController()..text = '8';
 
-  //final _cTest = TextEditingController();
-
   StackLRU<int> lruStack = StackLRU();
+  FIFOQueue<int> fifoQueue = FIFOQueue();
+
   TLB tlb = TLB(length: 0);
 
   String chosenAlgorithm = 'LRU';
@@ -60,13 +59,13 @@ class _VirtualMemoryState extends State<VirtualMemory> {
     ramMemory = Ram(
         offsetBits: int.parse(_cOffset.text),
         physicalSize: int.parse(_cPhysSize.text));
-    //_cTest.text = ap.allProc[0]!.va[0].p.toString();
 
     tlb = TLB(length: int.parse(_cTLBEntries.text));
 
     //initialize stack
     for (int i = 0; i < ramMemory.ramLength; i++) {
       lruStack.push(i);
+      fifoQueue.enqueue(i);
     }
 
     setState(() {
@@ -79,7 +78,8 @@ class _VirtualMemoryState extends State<VirtualMemory> {
     return Padding(
       padding: const EdgeInsets.only(left: 15, bottom: 15),
       child: SizedBox(
-        width: 200, // Increased width for better readability
+        width: 200,
+        height: 40,
         child: MyTextField(
           hintText: hintText,
           controller: controller,
@@ -92,9 +92,9 @@ class _VirtualMemoryState extends State<VirtualMemory> {
     return Expanded(
       child: Container(
         width: 200,
-        height: 300, // Adjust the width as needed
+        height: 300,
         child: ListView.builder(
-          itemCount: ap.allProc?.length ?? 0,
+          itemCount: ap.allProc.length ?? 0,
           itemBuilder: (context, index) => ListTile(
             title: Text('Process $index'),
             onTap: () {
@@ -113,8 +113,7 @@ class _VirtualMemoryState extends State<VirtualMemory> {
       return Container(); // Empty container when no process is selected
     }
 
-    // Assuming AllProcesses has a List of PageTables
-    PageTable? pageTable = ap.allProc?[selectedProcessIndex]?.pageTable;
+    PageTable? pageTable = ap.allProc[selectedProcessIndex]?.pageTable;
 
     if (pageTable == null) {
       return Container(); // Empty container when no PageTable is available for the selected process
@@ -192,8 +191,6 @@ class _VirtualMemoryState extends State<VirtualMemory> {
               (index) => DataRow(
                 cells: [
                   DataCell(Text('$index')),
-                  // DataCell(
-                  //    Text('${ramMemory.getRamEntry(index).processNumber}')),
                   DataCell(Text(
                     ramMemory.getRamEntry(index).data,
                     style: TextStyle(
@@ -278,7 +275,6 @@ class _VirtualMemoryState extends State<VirtualMemory> {
                   DataCell(Text('${tlb.entries[index].pid}')),
                   DataCell(
                     Text('${tlb.entries[index].valid}'),
-                    // Set the color based on the tlb.hit variable
                   ),
                 ],
               ),
@@ -317,7 +313,6 @@ class _VirtualMemoryState extends State<VirtualMemory> {
                   text: '${address.p}',
                   style: TextStyle(
                     color: address.executed == true ? Colors.green : Colors.red,
-                    // Add other styles if needed
                   ),
                 ),
                 TextSpan(
@@ -328,7 +323,6 @@ class _VirtualMemoryState extends State<VirtualMemory> {
                   text: '${address.d}',
                   style: TextStyle(
                     color: address.executed == true ? Colors.green : Colors.red,
-                    // Add other styles if needed
                   ),
                 ),
               ],
@@ -341,22 +335,12 @@ class _VirtualMemoryState extends State<VirtualMemory> {
   void executeInstruction() {
     // Check if a process is selected
     if (selectedProcessIndex != -1) {
-      // Assuming each process has a reference to its PageTable
       PageTable? pageTable = ap.allProc[selectedProcessIndex]?.pageTable;
-      int result = Algorithms.execute(ramMemory, tlb, currentTime,
-          selectedProcessIndex, ap, chosenAlgorithm, lruStack);
+      Algorithms.execute(ramMemory, tlb, selectedProcessIndex, ap,
+          chosenAlgorithm, lruStack, fifoQueue);
 
-      //if (result == PAGE_NOT_ALREADY_MAPPED)
-      currentTime++;
-      //else
-      //print("Page already mapped\n");
-      // Check if the PageTable is not null
       if (pageTable != null) {
-        // Update the UI by triggering a rebuild
-        setState(() {
-          // Update the RAM memory (you need to implement this method in your Ram class)
-          //ramMemory.updateFromPageTable(pageTable);
-        });
+        setState(() {});
       }
     }
   }
@@ -383,7 +367,7 @@ class _VirtualMemoryState extends State<VirtualMemory> {
         ),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(20), // Added padding for better spacing
+        padding: const EdgeInsets.all(20),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -395,33 +379,53 @@ class _VirtualMemoryState extends State<VirtualMemory> {
                 _buildTextField("# of offset bits", _cOffset),
                 _buildTextField("TLB entries", _cTLBEntries),
 
-                DropdownBtn(),
+                DropdownButton<String>(
+                  value: chosenAlgorithm,
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      chosenAlgorithm = newValue!;
+                    });
+                  },
+                  items: replAlgorithms
+                      .map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(
+                        value,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                  dropdownColor: Color.fromARGB(255, 106, 116, 177),
+                ),
 
-                SizedBox(
-                    height: 20), // Added spacing between text fields and button
+                SizedBox(height: 20),
                 Button(
                   text: "Start Simulation",
                   onPressed: startSimulation,
                 ),
 
                 SizedBox(height: 30), // Added spacing before the process list
-                buildProcessList(), // Display the list of processes
+                buildProcessList(),
                 SizedBox(height: 20),
 
                 buildVirtualAddresses(),
+
+                /*
                 Text(
-                  'Current simulation time: $currentTime',
+                  'Current simulation time: current time',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+                */
               ],
             ),
             const SizedBox(width: 20),
             buildTLB(),
-
-            buildPageTable(), // Display the Page Table for the selected process
-
+            buildPageTable(),
             buildRamTable(),
           ],
         ),

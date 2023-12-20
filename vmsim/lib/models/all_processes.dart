@@ -1,3 +1,5 @@
+// ignore_for_file: unnecessary_this
+
 import 'dart:collection';
 
 import 'package:vmsim/models/process.dart';
@@ -22,7 +24,7 @@ class AllProcesses {
           offsetBits: this.offsetBits,
           virtualSize: this.virtualSize,
           processNumber: i,
-          numberVirtualAddr: 15);
+          numberVirtualAddr: 18);
     }
   }
 }

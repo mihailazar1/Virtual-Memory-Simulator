@@ -1,5 +1,3 @@
-// ignore_for_file: unnecessary_this
-
 import 'dart:math';
 
 import 'package:vmsim/models/tlb_entry.dart';

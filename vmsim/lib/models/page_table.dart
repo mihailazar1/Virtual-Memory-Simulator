@@ -5,7 +5,7 @@ import 'dart:math';
 class PageTable {
   int offsetBits;
   int virtualSize;
-  int lastToColor = -1;
+  int lastToColor = -1; // for pretty print
   late List<int> pages;
   late List<int> validInvalid;
   late int length;
