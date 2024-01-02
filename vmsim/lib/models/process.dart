@@ -72,8 +72,7 @@ class Process {
       ];
     }
 
-    /*
-    List<VirtualAddress>.generate(
+    va = List<VirtualAddress>.generate(
       this.numberVirtualAddr,
       (index) => VirtualAddress(
         p: random.nextInt(pow(2, pageBitsLen).toInt()),
@@ -81,7 +80,5 @@ class Process {
         executed: false,
       ),
     );
-    
-    */
   }
 }

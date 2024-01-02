@@ -40,6 +40,7 @@ class Algorithms {
     if (mappingNotInTLBorInvalid(tlb, pageNumber, process.processNumber)) {
       print('tlb miss!');
       tlb.hit = 0;
+      tlb.nbMiss++;
 
       if (pageTable.isValid(pageNumber) == false) {
         handlePageFault(ramMemory, process, tlb, pageNumber, 'Block: $content',
@@ -61,6 +62,7 @@ class Algorithms {
       return PAGE_ALREADY_MAPPED;
     } else {
       print('TLB HIT!\n');
+      tlb.nbHits++;
       tlb.hit = 1;
 
       if (algorithm == "LRU") {

@@ -5,6 +5,9 @@ import 'package:vmsim/models/tlb_entry.dart';
 class TLB {
   int length;
   int hit = -1;
+  int nbHits = 0;
+  int nbMiss = 0;
+  int processedAddr = 0;
   late List<TLBEntry> entries = [];
 
   TLB({required this.length}) {

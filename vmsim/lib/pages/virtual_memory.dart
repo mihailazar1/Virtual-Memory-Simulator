@@ -4,6 +4,7 @@ import "package:flutter/material.dart";
 import 'package:vmsim/algorithms/vmalgorithms.dart';
 import "package:vmsim/models/FIFOqueue.dart";
 import "package:vmsim/models/all_processes.dart";
+import "package:vmsim/models/hit_rate_widget.dart";
 import "package:vmsim/models/page_table.dart";
 import "package:vmsim/models/ram.dart";
 import "package:vmsim/models/tlb.dart";
@@ -34,6 +35,10 @@ class _VirtualMemoryState extends State<VirtualMemory> {
   FIFOQueue<int> fifoQueue = FIFOQueue();
 
   TLB tlb = TLB(length: 0);
+
+  int hitRate = 0;
+  int missRate = 0;
+  int executedInstr = 0;
 
   String chosenAlgorithm = 'LRU';
 
@@ -339,6 +344,8 @@ class _VirtualMemoryState extends State<VirtualMemory> {
       Algorithms.execute(ramMemory, tlb, selectedProcessIndex, ap,
           chosenAlgorithm, lruStack, fifoQueue);
 
+      executedInstr++;
+
       if (pageTable != null) {
         setState(() {});
       }
@@ -413,14 +420,15 @@ class _VirtualMemoryState extends State<VirtualMemory> {
 
                 buildVirtualAddresses(),
 
-                /*
-                Text(
-                  'Current simulation time: current time',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                */
+                HitRateText(
+                    text: 'Hit rate: ',
+                    number: tlb.nbHits,
+                    executedInstr: executedInstr),
+
+                HitRateText(
+                    text: 'Miss rate: ',
+                    number: tlb.nbMiss,
+                    executedInstr: executedInstr),
               ],
             ),
             const SizedBox(width: 20),
