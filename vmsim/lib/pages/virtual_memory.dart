@@ -67,7 +67,7 @@ class _VirtualMemoryState extends State<VirtualMemory> {
 
     tlb = TLB(length: int.parse(_cTLBEntries.text));
 
-    //initialize stack
+    //initialize stack and queue
     for (int i = 0; i < ramMemory.ramLength; i++) {
       lruStack.push(i);
       fifoQueue.enqueue(i);
@@ -124,169 +124,190 @@ class _VirtualMemoryState extends State<VirtualMemory> {
       return Container(); // Empty container when no PageTable is available for the selected process
     }
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.vertical,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          DataTable(
-            columns: [
-              DataColumn(label: Text('Page Number')),
-              DataColumn(label: Text('Frame Number')),
-              DataColumn(label: Text('Valid Bit')),
-            ],
-            rows: List.generate(
-              pageTable.length,
-              (index) => DataRow(
-                cells: [
-                  DataCell(Text(
-                    '$index',
-                    style: TextStyle(
-                        color: (pageTable.lastToColor == index)
-                            ? Colors.green
-                            : Colors.black,
-                        fontWeight: (pageTable.lastToColor == index)
-                            ? FontWeight.bold
-                            : FontWeight.normal),
-                  )),
-                  DataCell(Text(
-                    '${pageTable.pages?[index]}',
-                    style: TextStyle(
-                        color: (pageTable.lastToColor == index)
-                            ? Colors.green
-                            : Colors.black,
-                        fontWeight: (pageTable.lastToColor == index)
-                            ? FontWeight.bold
-                            : FontWeight.normal),
-                  )),
-                  DataCell(Text(
-                    '${pageTable.validInvalid?[index]}',
-                    style: TextStyle(
-                        color: (pageTable.lastToColor == index)
-                            ? Colors.green
-                            : Colors.black,
-                        fontWeight: (pageTable.lastToColor == index)
-                            ? FontWeight.bold
-                            : FontWeight.normal),
-                  )),
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text('Page Table',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 21)),
+        SingleChildScrollView(
+          scrollDirection: Axis.vertical,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              DataTable(
+                columns: [
+                  DataColumn(label: Text('Page Number')),
+                  DataColumn(label: Text('Frame Number')),
+                  DataColumn(label: Text('Valid Bit')),
                 ],
-              ),
-            ),
-          )
-        ],
-      ),
+                rows: List.generate(
+                  pageTable.length,
+                  (index) => DataRow(
+                    cells: [
+                      DataCell(Text(
+                        '$index',
+                        style: TextStyle(
+                            color: (pageTable.lastToColor == index)
+                                ? Colors.green
+                                : Colors.black,
+                            fontWeight: (pageTable.lastToColor == index)
+                                ? FontWeight.bold
+                                : FontWeight.normal),
+                      )),
+                      DataCell(Text(
+                        '${pageTable.pages?[index]}',
+                        style: TextStyle(
+                            color: (pageTable.lastToColor == index)
+                                ? Colors.green
+                                : Colors.black,
+                            fontWeight: (pageTable.lastToColor == index)
+                                ? FontWeight.bold
+                                : FontWeight.normal),
+                      )),
+                      DataCell(Text(
+                        '${pageTable.validInvalid?[index]}',
+                        style: TextStyle(
+                            color: (pageTable.lastToColor == index)
+                                ? Colors.green
+                                : Colors.black,
+                            fontWeight: (pageTable.lastToColor == index)
+                                ? FontWeight.bold
+                                : FontWeight.normal),
+                      )),
+                    ],
+                  ),
+                ),
+              )
+            ],
+          ),
+        ),
+      ],
     );
   }
 
   Widget buildRamTable() {
     if (ramMemory.ramLength == 0) return Container();
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.vertical,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          DataTable(
-            columns: [
-              DataColumn(label: Text('Frame #')),
-              DataColumn(label: Text('Data')),
-            ],
-            rows: List.generate(
-              ramMemory.ramLength,
-              (index) => DataRow(
-                cells: [
-                  DataCell(Text('$index')),
-                  DataCell(Text(
-                    ramMemory.getRamEntry(index).data,
-                    style: TextStyle(
-                        color: (ramMemory.lastToColor == index)
-                            ? Colors.green
-                            : Colors.black),
-                  )),
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text('RAM',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 21)),
+        SingleChildScrollView(
+          scrollDirection: Axis.vertical,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              DataTable(
+                columns: [
+                  DataColumn(label: Text('Frame #')),
+                  DataColumn(label: Text('Data')),
                 ],
+                rows: List.generate(
+                  ramMemory.ramLength,
+                  (index) => DataRow(
+                    cells: [
+                      DataCell(Text('$index')),
+                      DataCell(Text(
+                        ramMemory.getRamEntry(index).data,
+                        style: TextStyle(
+                            color: (ramMemory.lastToColor == index)
+                                ? Colors.green
+                                : Colors.black),
+                      )),
+                    ],
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
   Widget buildTLB() {
     if (tlb.length == 0) return Container();
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.vertical,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          DataTable(
-            columns: [
-              DataColumn(
-                label: Text(
-                  'Page #',
-                  style: TextStyle(
-                    color: (tlb.hit == 1)
-                        ? Colors.green
-                        : (tlb.hit == -1)
-                            ? Colors.black
-                            : Colors.red,
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text('TLB',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 21)),
+        SingleChildScrollView(
+          scrollDirection: Axis.vertical,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              DataTable(
+                columns: [
+                  DataColumn(
+                    label: Text(
+                      'Page #',
+                      style: TextStyle(
+                        color: (tlb.hit == 1)
+                            ? Colors.green
+                            : (tlb.hit == -1)
+                                ? Colors.black
+                                : Colors.red,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              DataColumn(
-                label: Text(
-                  'Frame #',
-                  style: TextStyle(
-                    color: (tlb.hit == 1)
-                        ? Colors.green
-                        : (tlb.hit == -1)
-                            ? Colors.black
-                            : Colors.red,
+                  DataColumn(
+                    label: Text(
+                      'Frame #',
+                      style: TextStyle(
+                        color: (tlb.hit == 1)
+                            ? Colors.green
+                            : (tlb.hit == -1)
+                                ? Colors.black
+                                : Colors.red,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              DataColumn(
-                label: Text(
-                  'Process #',
-                  style: TextStyle(
-                    color: (tlb.hit == 1)
-                        ? Colors.green
-                        : (tlb.hit == -1)
-                            ? Colors.black
-                            : Colors.red,
+                  DataColumn(
+                    label: Text(
+                      'Process #',
+                      style: TextStyle(
+                        color: (tlb.hit == 1)
+                            ? Colors.green
+                            : (tlb.hit == -1)
+                                ? Colors.black
+                                : Colors.red,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              DataColumn(
-                label: Text(
-                  'Valid',
-                  style: TextStyle(
-                    color: (tlb.hit == 1)
-                        ? Colors.green
-                        : (tlb.hit == -1)
-                            ? Colors.black
-                            : Colors.red,
+                  DataColumn(
+                    label: Text(
+                      'Valid',
+                      style: TextStyle(
+                        color: (tlb.hit == 1)
+                            ? Colors.green
+                            : (tlb.hit == -1)
+                                ? Colors.black
+                                : Colors.red,
+                      ),
+                    ),
+                  ),
+                ],
+                rows: List.generate(
+                  tlb.length,
+                  (index) => DataRow(
+                    cells: [
+                      DataCell(Text('${tlb.entries[index].virtualPage}')),
+                      DataCell(Text('${tlb.entries[index].physicalPage}')),
+                      DataCell(Text('${tlb.entries[index].pid}')),
+                      DataCell(
+                        Text('${tlb.entries[index].valid}'),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ],
-            rows: List.generate(
-              tlb.length,
-              (index) => DataRow(
-                cells: [
-                  DataCell(Text('${tlb.entries[index].virtualPage}')),
-                  DataCell(Text('${tlb.entries[index].physicalPage}')),
-                  DataCell(Text('${tlb.entries[index].pid}')),
-                  DataCell(
-                    Text('${tlb.entries[index].valid}'),
-                  ),
-                ],
-              ),
-            ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -357,10 +378,11 @@ class _VirtualMemoryState extends State<VirtualMemory> {
     return Scaffold(
       backgroundColor: Color.fromARGB(255, 242, 242, 242),
       appBar: AppBar(
+        backgroundColor: Colors.indigo[100],
         title: const Center(
           child: Text(
             "Virtual Memory Simulator",
-            style: TextStyle(fontSize: 25),
+            style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
           ),
         ),
         elevation: 0,
@@ -431,9 +453,12 @@ class _VirtualMemoryState extends State<VirtualMemory> {
                     executedInstr: executedInstr),
               ],
             ),
-            const SizedBox(width: 20),
+            // const SizedBox(width: 20),
+
             buildTLB(),
+
             buildPageTable(),
+
             buildRamTable(),
           ],
         ),

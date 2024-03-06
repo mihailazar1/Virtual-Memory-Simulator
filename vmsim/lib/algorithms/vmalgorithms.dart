@@ -88,8 +88,7 @@ class Algorithms {
       StackLRU lruStack,
       FIFOQueue fifoQueue,
       AllProcesses allProcesses) {
-    int frameNumber = findFreeFrame(
-        ramMemory); // Implement the logic to find a free frame or use a page replacement algorithm
+    int frameNumber = findFreeFrame(ramMemory);
 
     if (frameNumber == -1) {
       // No free frame, find free frame with an algorithm
@@ -113,7 +112,8 @@ class Algorithms {
     for (int i = 0; i < allProcesses.noProc; i++) {
       Process? process = allProcesses.allProc[i];
       PageTable iterPageTable = process!.pageTable;
-      updatePageTableToReflectFrameWasMovedToDisk(iterPageTable, frameNumber);
+      updatePageTableToReflectFrameWasMovedToDisk(iterPageTable,
+          frameNumber); // if the frame is already mapped from another page table,
       updateTLBtoReflectFrameWasMovedToDisk(
           tlb, frameNumber, process.processNumber);
     }
@@ -122,10 +122,11 @@ class Algorithms {
 
     tlb.addTLBEntry(pageNumber, frameNumber, process.processNumber);
 
+    // after frame is accessed, move it on top of stack
     if (algorithm == "LRU") {
+      // doing this the second time does not change anything
       accessFrame(lruStack, frameNumber);
     }
-    // after frame is accessed, move it on top of stack
 
     toggleValidBit(pageTable, pageNumber); // set valid bit to 1
 

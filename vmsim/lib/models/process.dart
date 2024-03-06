@@ -28,6 +28,7 @@ class Process {
 
     Random random = Random();
 
+    /*
     if (processNumber == 1) {
       va = [
         VirtualAddress(p: 6, d: 2, executed: false),
@@ -71,6 +72,7 @@ class Process {
         VirtualAddress(p: 13, d: 2, executed: false),
       ];
     }
+    */
 
     va = List<VirtualAddress>.generate(
       this.numberVirtualAddr,
