@@ -75,7 +75,7 @@ class Algorithms {
     }
   }
 
-  //TODO================================================================================
+ 
 
   static void handlePageFault(
       Ram ramMemory,
@@ -134,7 +134,6 @@ class Algorithms {
         pageNumber, frameNumber); // update the page table
   }
 
-  //TODO================================================================================
 
   static bool mappingNotInTLBorInvalid(
       TLB tlb, int pageNumber, int processNumber) {
