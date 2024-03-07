@@ -94,17 +94,17 @@ class Algorithms {
       // No free frame, find free frame with an algorithm
       if (algorithm == "LRU") {
         frameNumber = Algorithms.findLRUPage(lruStack);
-        print("ALGO IS LRU");
+        
       }
 
       if (algorithm == "FIFO") {
         frameNumber = Algorithms.findFIFOPage(fifoQueue);
-        print("ALGO IS FIFO");
+        
       }
 
       if (algorithm == "RANDOM") {
         frameNumber = Algorithms.findRANDOMPage(ramMemory.ramLength);
-        print("ALGO IS RANDOM");
+        
       }
     }
 
