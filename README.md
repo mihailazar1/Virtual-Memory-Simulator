@@ -18,12 +18,12 @@ Parameters selection: <br/>
 <br/>
 
 Beginning of simulation: <br/>
-<img src="https://i.imgur.com/e755nnC.png" height="80%" width="80%" alt="the Bible menu"/>
+<img src="https://i.imgur.com/e755nnC.png" height="90%" width="90%" alt="the Bible menu"/>
 <br/>
 <br/>
 
 End of simulation: <br/>
-<img src="https://i.imgur.com/sUJqB0Z.png" height="80%" width="80%" alt="the Bible menu"/>
+<img src="https://i.imgur.com/sUJqB0Z.png" height="90%" width="90%" alt="the Bible menu"/>
 <br/>
 <br/>
 
