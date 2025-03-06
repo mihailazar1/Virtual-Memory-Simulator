@@ -1,7 +1,9 @@
 <h1>Virtual Memory Simulator</h1>
 
 <h2>Description</h2>
-The project simulates the way virtual memory works. The addresses for the CPU are randomly generated, and at each step of the simulation, the Table lookaside buffer (TLB), main memory and the page tables for each process can be visualized. Users have the option to select between the following page replacement algorithms: LRU (least recently used), FIFO (first in first out), and Random. To assess the performance of each algorithm, hit/miss rates are displayed. The simulation progresses by one step, meaning one address is processed by the CPU, with each click of the button located at the bottom right.
+This project simulates the workings of virtual memory, providing a dynamic visualization of key components such as the Table Lookaside Buffer (TLB), main memory, and page tables for each process. The CPU generates addresses randomly, and at each step of the simulation, users can observe how these components interact.
+
+Users can choose from three page replacement algorithms: Least Recently Used (LRU), First In, First Out (FIFO), and Random. To evaluate the efficiency of each algorithm, the simulation displays hit/miss rates in real time. The simulation advances one step at a time—processing a single address per step—whenever the button in the bottom right corner is clicked.
 <br />
 
 
