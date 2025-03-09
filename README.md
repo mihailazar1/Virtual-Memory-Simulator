@@ -12,7 +12,7 @@ This project simulates the workings of virtual memory, providing a dynamic visua
 
 <p>
 Parameters selection: <br/>
-<img src="https://imgur.com/a/0cPQoWQ" height="30%" width="30%" alt="the Bible menu"/>
+<img src="https://i.imgur.com/gWsgsNi.png" height="30%" width="30%" alt="the Bible menu"/>
 <br/>
 <br/>
 
